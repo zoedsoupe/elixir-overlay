@@ -4,7 +4,7 @@
   pkgs,
   ...
 }: let
-  inherit (lib) mapAttrs optionalString;
+  inherit (lib) mapAttrs;
   inherit (manifests) versions latest;
 
   buildElixir = version: versionData:
@@ -26,16 +26,16 @@
       preBuild = ''
         substituteInPlace Makefile \
           --replace "/usr/local" $out
-        
-        # Fix generate_app.escript path if it exists
+
         if [ -f lib/elixir/scripts/generate_app.escript ]; then
           patchShebangs lib/elixir/scripts/generate_app.escript
         fi
       '';
 
       postFixup = ''
-        # Elixir binaries are shell scripts which run erl. Add some stuff
-        # to PATH so the scripts can run without problems.
+        substituteInPlace $out/bin/mix \
+          --replace "/usr/bin/env elixir" "$out/bin/elixir"
+
         for f in $out/bin/*; do
           b=$(basename $f)
           if [ "$b" = mix ]; then continue; fi
@@ -47,9 +47,6 @@
           pkgs.bash
         ]}"
         done
-
-        substituteInPlace $out/bin/mix \
-          --replace "/usr/bin/env elixir" "$out/bin/elixir"
       '';
 
       meta = with lib; {
@@ -61,7 +58,7 @@
         '';
         homepage = "https://elixir-lang.org/";
         license = licenses.asl20;
-        maintainers = with maintainers; [];
+        maintainers = with maintainers; [zoedsoupe];
         platforms = platforms.unix;
 
         passthru = {

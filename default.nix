@@ -1,5 +1,4 @@
 final: prev: let
-  inherit (builtins) mapAttrs readFile;
   inherit (final) lib;
 
   manifests = import ./lib/manifests.nix {

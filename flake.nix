@@ -15,7 +15,6 @@
     {
       overlays.default = import ./.;
 
-      # Legacy overlay name for compatibility
       overlay = self.overlays.default;
     }
     // flake-utils.lib.eachDefaultSystem (
