@@ -20,7 +20,7 @@ Features:
 
 You can put the code below into your `~/.config/nixpkgs/overlays.nix`.
 ```nix
-[ (import (builtins.fetchTarball "https://github.com/your-username/elixir-overlay/archive/main.tar.gz")) ]
+[ (import (builtins.fetchTarball "https://github.com/zoedsoupe/elixir-overlay/archive/main.tar.gz")) ]
 ```
 Then the provided attribute paths are available in nix command.
 ```bash
@@ -30,7 +30,7 @@ $ nix-env -iA nixpkgs.elixir-bin."1.17.0" # Install specific version
 
 Alternatively, you can install it into nix channels.
 ```bash
-$ nix-channel --add https://github.com/your-username/elixir-overlay/archive/main.tar.gz elixir-overlay
+$ nix-channel --add https://github.com/zoedsoupe/elixir-overlay/archive/main.tar.gz elixir-overlay
 $ nix-channel --update
 ```
 And then feel free to use it anywhere like
@@ -40,7 +40,7 @@ And then feel free to use it anywhere like
 
 For a quick play, just use `nix shell` to bring the latest Elixir into scope.
 ```shell
-$ nix shell github:your-username/elixir-overlay
+$ nix shell github:zoedsoupe/elixir-overlay
 $ elixir --version
 ```
 
@@ -54,7 +54,7 @@ Here's an example of using it in nixos configuration.
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     elixir-overlay = {
-      url = "github:your-username/elixir-overlay";
+      url = "github:zoedsoupe/elixir-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -86,7 +86,7 @@ Running `nix develop` will create a shell with Elixir installed:
 
   inputs = {
     nixpkgs.url      = "github:NixOS/nixpkgs/nixos-unstable";
-    elixir-overlay.url = "github:your-username/elixir-overlay";
+    elixir-overlay.url = "github:zoedsoupe/elixir-overlay";
     flake-utils.url  = "github:numtide/flake-utils";
   };
 

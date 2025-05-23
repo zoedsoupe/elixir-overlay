@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: cachix/install-nix-action@v25
+      with:
+        github_access_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Check flake
+      run: nix flake check
+    
+    - name: Build latest Elixir
+      run: nix build
+    
+    - name: Test overlay functionality
+      run: |
+        nix eval --raw '.#packages.x86_64-linux.latest.version'
+        nix eval --expr 'let pkgs = import <nixpkgs> { overlays = [ (import ./.) ]; }; in pkgs.elixir-bin."1.17.3".version'
+
+  build-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        elixir-version: ["1.18.4", "1.17.3", "1.16.0", "1.15.4"]
+    steps:
+    - uses: actions/checkout@v4
+    
+    - uses: cachix/install-nix-action@v25
+      with:
+        github_access_token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Build Elixir ${{ matrix.elixir-version }}
+      run: |
+        nix build --expr 'let pkgs = import <nixpkgs> { overlays = [ (import ./.) ]; }; in pkgs.elixir-bin."${{ matrix.elixir-version }}"'
