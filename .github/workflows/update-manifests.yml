@@ -2,7 +2,7 @@ name: Update Elixir Manifests
 
 on:
   schedule:
-    - cron: '0 6 * * *'
+    - cron: '0 6 * * 0'  # Weekly on Sundays at 6 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -17,6 +17,15 @@ jobs:
       uses: cachix/install-nix-action@v27
       with:
         nix_path: nixpkgs=channel:nixos-unstable
+        extra_nix_config: |
+          experimental-features = nix-command flakes
+          substituters = https://cache.nixos.org/ https://nix-community.cachix.org
+          trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs=
+    
+    - uses: cachix/cachix-action@v15
+      with:
+        name: elixir-overlay
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
         
     - name: Run fetch script
       run: ./scripts/fetch_elixir.exs
