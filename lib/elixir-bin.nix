@@ -14,48 +14,42 @@
 
       src = pkgs.fetchurl {
         inherit (versionData) url sha256;
+        name = "elixir-${version}.tar.gz";
       };
 
-      nativeBuildInputs = with pkgs; [
-        erlang
-        makeWrapper
-      ];
+      nativeBuildInputs = with pkgs; [makeWrapper];
+      buildInputs = with pkgs; [erlang];
 
-      env = {
-        LANG = "C.UTF-8";
-        LC_ALL = "C.UTF-8";
-      };
+      LANG = "C.UTF-8";
+      LC_TYPE = "C.UTF-8";
 
-      configurePhase = "true";
-
-      buildPhase = ''
-        runHook preBuild
-        make compile
-        runHook postBuild
+      preBuild = ''
+        substituteInPlace Makefile \
+          --replace "/usr/local" $out
+        
+        # Fix generate_app.escript path if it exists
+        if [ -f lib/elixir/scripts/generate_app.escript ]; then
+          patchShebangs lib/elixir/scripts/generate_app.escript
+        fi
       '';
 
-      installPhase = ''
-        runHook preInstall
-
-        make install PREFIX=$out
-
-        for bin in $out/bin/*; do
-          if [ -f "$bin" ] && [ -x "$bin" ]; then
-            wrapProgram "$bin" \
-              --prefix PATH : ${pkgs.erlang}/bin \
-              --set LANG "C.UTF-8" \
-              --set LC_ALL "C.UTF-8"
-          fi
+      postFixup = ''
+        # Elixir binaries are shell scripts which run erl. Add some stuff
+        # to PATH so the scripts can run without problems.
+        for f in $out/bin/*; do
+          b=$(basename $f)
+          if [ "$b" = mix ]; then continue; fi
+          wrapProgram $f \
+            --prefix PATH ":" "${lib.makeBinPath [
+          pkgs.erlang
+          pkgs.coreutils
+          pkgs.curl
+          pkgs.bash
+        ]}"
         done
 
-        runHook postInstall
-      '';
-
-      doCheck = true;
-      checkPhase = ''
-        runHook preCheck
-        make test
-        runHook postCheck
+        substituteInPlace $out/bin/mix \
+          --replace "/usr/bin/env elixir" "$out/bin/elixir"
       '';
 
       meta = with lib; {

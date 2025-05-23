@@ -25,10 +25,16 @@
           overlays = [self.overlays.default];
         };
       in {
-        packages = {
-          default = pkgs.elixir-bin.latest;
-          latest = pkgs.elixir-bin.latest;
-        };
+        packages =
+          {
+            default = pkgs.elixir-bin.latest;
+            latest = pkgs.elixir-bin.latest;
+          }
+          // (nixpkgs.lib.mapAttrs' (version: pkg: {
+              name = "elixir_${builtins.replaceStrings ["."] ["_"] version}";
+              value = pkg;
+            })
+            pkgs.elixir-bin);
 
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
