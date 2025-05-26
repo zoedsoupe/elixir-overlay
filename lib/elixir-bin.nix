@@ -40,12 +40,7 @@
           b=$(basename $f)
           if [ "$b" = mix ]; then continue; fi
           wrapProgram $f \
-            --prefix PATH ":" "${lib.makeBinPath [
-          pkgs.erlang
-          pkgs.coreutils
-          pkgs.curl
-          pkgs.bash
-        ]}"
+            --prefix PATH ":" "${lib.makeBinPath [pkgs.erlang pkgs.coreutils pkgs.curl pkgs.bash]}"
         done
       '';
 
