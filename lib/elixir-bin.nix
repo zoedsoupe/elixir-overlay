@@ -34,7 +34,7 @@
 
       postFixup = ''
         substituteInPlace $out/bin/mix \
-          --replace "/usr/bin/env elixir" "$out/bin/elixir"
+          --replace "/usr/bin/env elixir" "${pkgs.coreutils}/bin/env $out/bin/elixir"
 
         for f in $out/bin/*; do
           b=$(basename $f)
