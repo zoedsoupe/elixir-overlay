@@ -4,7 +4,7 @@ Pure and reproducible Elixir overlays for Nix. Inspired by [rust-overlay](https:
 
 ## Why elixir-overlay?
 
-- **All Elixir versions**: Access to any Elixir version from 1.15.0 to latest (1.18.4)
+- **All Elixir versions**: Access to any Elixir version from 1.15.0 to latest (1.18.4), including release candidates
 - **Automatic updates**: Daily automated checks for new releases with auto-generated PRs
 - **OTP compatibility**: Built-in tracking of OTP version compatibility for each Elixir version
 - **Zero maintenance**: No manual hash updates or version management needed
@@ -74,10 +74,11 @@ in
 
 ## Available Versions
 
-All Elixir versions from **1.15.0** to **1.18.4** are available with automatic OTP compatibility tracking:
+All Elixir versions from **1.15.0** to **1.18.4** are available, including release candidates (RC versions), with automatic OTP compatibility tracking:
 
 | Elixir Version | Min OTP | Max OTP | Status |
 |----------------|---------|---------|--------|
+| 1.19.x-rc      | 25      | 28      | Release Candidate |
 | 1.18.x         | 25      | 28      | Current |
 | 1.17.x         | 25      | 27      | Maintained |
 | 1.16.x         | 24      | 27      | Supported |
@@ -89,7 +90,9 @@ Elixir versions are available using the following patterns:
 
 - `pkgs.elixir-bin.latest` - Latest stable version (1.18.4)
 - `pkgs.elixir-bin."1.18.4"` - Specific version with quotes
+- `pkgs.elixir-bin."1.19.0-rc.0"` - Release candidate versions
 - `packages.elixir_1_18_4` - Flake package (dots replaced with underscores)
+- `packages.elixir_1_19_0-rc_0` - RC flake package (dots and hyphens replaced with underscores)
 
 ## Usage Examples
 
@@ -231,6 +234,7 @@ The automation is powered by a native Elixir script (`scripts/fetch_elixir.exs`)
 - Uses Mix.install for dependencies (Req HTTP client)
 - Leverages Elixir 1.18's native JSON library
 - Integrates with GitHub API for release detection
+- Detects both stable releases and release candidates (RC versions)
 - Calculates proper OTP version ranges
 - Uses nix-prefetch-url for SHA256 generation
 
@@ -246,6 +250,7 @@ The automation is powered by a native Elixir script (`scripts/fetch_elixir.exs`)
   elixir-bin."1.18.4"
   elixir-bin."1.17.3"
   elixir-bin."1.16.0"
+  elixir-bin."1.19.0-rc.0"  # Release candidates
   ```
 
 - **Legacy channel installation:**
