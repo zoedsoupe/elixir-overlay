@@ -1,5 +1,4 @@
-#!/usr/bin/env nix-shell
-#! nix-shell -i elixir -p elixir_1_18
+#!/usr/bin/env elixir
 
 Mix.install([
   {:req, "~> 0.4.0"}

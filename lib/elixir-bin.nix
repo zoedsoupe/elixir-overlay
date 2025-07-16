@@ -2,6 +2,7 @@
   lib,
   manifests,
   pkgs,
+  erlang ? pkgs.erlang,
   ...
 }: let
   inherit (lib) mapAttrs;
@@ -18,7 +19,7 @@
       };
 
       nativeBuildInputs = with pkgs; [makeWrapper];
-      buildInputs = with pkgs; [erlang];
+      buildInputs = [erlang];
 
       LANG = "C.UTF-8";
       LC_TYPE = "C.UTF-8";
@@ -40,7 +41,7 @@
           b=$(basename $f)
           if [ "$b" = mix ]; then continue; fi
           wrapProgram $f \
-            --prefix PATH ":" "${lib.makeBinPath [pkgs.erlang pkgs.coreutils pkgs.curl pkgs.bash]}"
+            --prefix PATH ":" "${lib.makeBinPath [erlang pkgs.coreutils pkgs.curl pkgs.bash]}"
         done
       '';
 
@@ -61,6 +62,8 @@
             min = versionData.minOtpVersion or null;
             max = versionData.maxOtpVersion or null;
           };
+          inherit erlang;
+          otpVersion = erlang.version or "unknown";
         };
       };
     };

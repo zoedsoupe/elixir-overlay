@@ -157,6 +157,41 @@ pkgs.mkShell {
 }
 ```
 
+### Custom OTP/Erlang Version
+
+You can override the OTP version used to compile Elixir using the `elixir-with-otp` function:
+
+```nix
+# flake.nix
+{
+  outputs = { nixpkgs, elixir-overlay, ... }:
+    let
+      system = "x86_64-linux";
+      pkgs = import nixpkgs {
+        inherit system;
+        overlays = [ elixir-overlay.overlays.default ];
+      };
+      
+      # Create custom Elixir packages with specific OTP versions
+      elixir-with-otp26 = pkgs.elixir-with-otp pkgs.erlang_26;
+      elixir-with-otp27 = pkgs.elixir-with-otp pkgs.erlang_27;
+    in {
+      devShells.default = pkgs.mkShell {
+        buildInputs = [
+          elixir-with-otp26."1.19.0-rc.0"
+
+          elixir-with-otp27.latest
+        ];
+      };
+    };
+}
+```
+
+This is particularly useful when:
+- Testing compatibility with different OTP versions
+- Working with legacy projects that require specific OTP versions
+- Debugging OTP-specific issues
+
 ### NixOS Configuration
 
 ```nix
