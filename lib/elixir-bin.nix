@@ -2,13 +2,32 @@
   lib,
   manifests,
   pkgs,
-  erlang ? pkgs.erlang,
+  erlang ? null,
   ...
 }: let
   inherit (lib) mapAttrs;
   inherit (manifests) versions latest;
 
-  buildElixir = version: versionData:
+  # Select compatible Erlang version based on maxOtpVersion constraint
+  # Prioritizes using the highest compatible OTP version available
+  selectErlang = versionData:
+    if erlang != null
+    then erlang
+    else let
+      maxOtp = lib.strings.toInt versionData.maxOtpVersion;
+    in
+      # Select the highest available OTP version that doesn't exceed maxOtp
+      if maxOtp >= 28
+      then pkgs.erlang_28
+      else if maxOtp >= 27
+      then pkgs.erlang_27
+      else if maxOtp >= 26
+      then pkgs.erlang_26
+      else pkgs.erlang_26; # Fallback to 26 for older Elixir versions
+
+  buildElixir = version: versionData: let
+    selectedErlang = selectErlang versionData;
+  in
     pkgs.stdenv.mkDerivation rec {
       pname = "elixir";
       inherit version;
@@ -19,7 +38,7 @@
       };
 
       nativeBuildInputs = with pkgs; [makeWrapper];
-      buildInputs = [erlang];
+      buildInputs = [selectedErlang];
 
       LANG = "C.UTF-8";
       LC_TYPE = "C.UTF-8";
@@ -41,9 +60,18 @@
           b=$(basename $f)
           if [ "$b" = mix ]; then continue; fi
           wrapProgram $f \
-            --prefix PATH ":" "${lib.makeBinPath [erlang pkgs.coreutils pkgs.curl pkgs.bash]}"
+            --prefix PATH ":" "${lib.makeBinPath [selectedErlang pkgs.coreutils pkgs.curl pkgs.bash]}"
         done
       '';
+
+      passthru = {
+        requiredOtpVersion = {
+          min = versionData.minOtpVersion or null;
+          max = versionData.maxOtpVersion or null;
+        };
+        erlang = selectedErlang;
+        otpVersion = selectedErlang.version or "unknown";
+      };
 
       meta = with lib; {
         description = "A dynamic, functional language designed for building maintainable applications";
@@ -56,15 +84,6 @@
         license = licenses.asl20;
         maintainers = with maintainers; [zoedsoupe];
         platforms = platforms.unix;
-
-        passthru = {
-          requiredOtpVersion = {
-            min = versionData.minOtpVersion or null;
-            max = versionData.maxOtpVersion or null;
-          };
-          inherit erlang;
-          otpVersion = erlang.version or "unknown";
-        };
       };
     };
 
