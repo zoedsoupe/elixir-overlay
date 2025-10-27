@@ -63,7 +63,7 @@ use flake github:zoedsoupe/elixir-overlay
 
 ```nix
 let
-  elixir-overlay = import (builtins.fetchTarball 
+  elixir-overlay = import (builtins.fetchTarball
     "https://github.com/zoedsoupe/elixir-overlay/archive/main.tar.gz");
   pkgs = import <nixpkgs> { overlays = [ elixir-overlay ]; };
 in
@@ -76,13 +76,13 @@ in
 
 All Elixir versions from **1.15.0** to **1.18.4** are available, including release candidates (RC versions), with automatic OTP compatibility tracking:
 
-| Elixir Version | Min OTP | Max OTP | Status |
-|----------------|---------|---------|--------|
+| Elixir Version | Min OTP | Max OTP | Status            |
+| -------------- | ------- | ------- | ----------------- |
 | 1.19.x-rc      | 25      | 28      | Release Candidate |
-| 1.18.x         | 25      | 28      | Current |
-| 1.17.x         | 25      | 27      | Maintained |
-| 1.16.x         | 24      | 27      | Supported |
-| 1.15.x         | 24      | 26      | Supported |
+| 1.18.x         | 25      | 28      | Current           |
+| 1.17.x         | 25      | 27      | Maintained        |
+| 1.16.x         | 24      | 27      | Supported         |
+| 1.15.x         | 24      | 26      | Supported         |
 
 ## Package Names
 
@@ -121,7 +121,7 @@ Elixir versions are available using the following patterns:
           nodejs
           inotify-tools  # For Phoenix live reload
         ];
-        
+
         shellHook = ''
           export MIX_ENV=dev
           export PHX_SERVER=true
@@ -146,7 +146,7 @@ pkgs.mkShell {
     "1.17.3"  # Legacy project
     "1.18.4"  # New project
   ];
-  
+
   shellHook = ''
     # Create aliases for different versions
     alias elixir17="${pkgs.elixir-bin."1.17.3"}/bin/elixir"
@@ -171,7 +171,7 @@ You can override the OTP version used to compile Elixir using the `elixir-with-o
         inherit system;
         overlays = [ elixir-overlay.overlays.default ];
       };
-      
+
       # Create custom Elixir packages with specific OTP versions
       elixir-with-otp26 = pkgs.elixir-with-otp pkgs.erlang_26;
       elixir-with-otp27 = pkgs.elixir-with-otp pkgs.erlang_27;
@@ -188,6 +188,7 @@ You can override the OTP version used to compile Elixir using the `elixir-with-o
 ```
 
 This is particularly useful when:
+
 - Testing compatibility with different OTP versions
 - Working with legacy projects that require specific OTP versions
 - Debugging OTP-specific issues
@@ -266,6 +267,7 @@ The overlay automatically updates daily via GitHub Actions:
 - **Nix expression generation** following nixpkgs patterns
 
 The automation is powered by a native Elixir script (`scripts/fetch_elixir.exs`) that:
+
 - Uses Mix.install for dependencies (Req HTTP client)
 - Leverages Elixir 1.18's native JSON library
 - Integrates with GitHub API for release detection
@@ -276,11 +278,13 @@ The automation is powered by a native Elixir script (`scripts/fetch_elixir.exs`)
 ## Cheat Sheet: Common Usage
 
 - **Latest Elixir version:**
+
   ```nix
   elixir-bin.latest
   ```
 
 - **Specific Elixir versions:**
+
   ```nix
   elixir-bin."1.18.4"
   elixir-bin."1.17.3"
@@ -289,6 +293,7 @@ The automation is powered by a native Elixir script (`scripts/fetch_elixir.exs`)
   ```
 
 - **Legacy channel installation:**
+
   ```bash
   $ nix-channel --add https://github.com/zoedsoupe/elixir-overlay/archive/main.tar.gz elixir-overlay
   $ nix-channel --update
