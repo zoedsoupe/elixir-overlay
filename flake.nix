@@ -38,6 +38,7 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             elixir-bin.latest
+            alejandra
           ];
         };
       }
