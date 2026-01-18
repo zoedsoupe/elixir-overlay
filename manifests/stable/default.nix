@@ -1,5 +1,11 @@
 {
   versions = {
+    "1.20.0-rc.1" = {
+      sha256 = "0blj6sfs2alaabf6m8khla1wvsqp72j0dw5ik2pssh91gjr1iy7z";
+      url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.20.0-rc.1";
+      minOtpVersion = "25";
+      maxOtpVersion = "28";
+    };
     "1.20.0-rc.0" = {
       sha256 = "1l6ig4prvh1ab8dgaj7s11gmc9ab4802x6a3cy0i5zm4l1asdam3";
       url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.20.0-rc.0";
