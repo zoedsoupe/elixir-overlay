@@ -1,5 +1,17 @@
 {
   versions = {
+    "1.20.2" = {
+      sha256 = "1c76wsy8zf6xfdp2abicfa70n7b8p4mw1v1f6gy52rh1m7wvn98s";
+      url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.20.2";
+      minOtpVersion = "25";
+      maxOtpVersion = "28";
+    };
+    "1.20.1" = {
+      sha256 = "0xxg7alj1qvrrmjsk4f33c2m5f9s4b3madk1f66inb3jv9b8gvds";
+      url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.20.1";
+      minOtpVersion = "25";
+      maxOtpVersion = "28";
+    };
     "1.20.0-rc.6" = {
       sha256 = "03pc9hc504q86v1xlnnj2w8d03mqgarlv0n6kl3l1lvny5d7kf6m";
       url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.20.0-rc.6";
