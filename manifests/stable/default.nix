@@ -1,5 +1,11 @@
 {
   versions = {
+    "1.20.4" = {
+      sha256 = "0sd81pcnhpz0axsnxym0rxin9s9x6pbd82icx3pcngjq08bvx1rg";
+      url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.20.4";
+      minOtpVersion = "25";
+      maxOtpVersion = "28";
+    };
     "1.20.3" = {
       sha256 = "1gbp6xnd33w4v91nwmi8f5ljyxmlii73n68svd1i8qrhn6aah8pz";
       url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.20.3";
@@ -66,6 +72,12 @@
       minOtpVersion = "25";
       maxOtpVersion = "28";
     };
+    "1.19.6" = {
+      sha256 = "0wfhck46i1aal94hms0hvdb5m1v044dnqmrwgb76d1p8p47c09ww";
+      url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.19.6";
+      minOtpVersion = "25";
+      maxOtpVersion = "28";
+    };
     "1.19.5" = {
       sha256 = "0dlflwcdx0da09grndgsj2c9k1ix7vq6vaxg4lgaq42bsy5hnx8h";
       url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.19.5";
@@ -117,6 +129,12 @@
     "1.19.0" = {
       sha256 = "0d4j089r3dl0xw2kr8d5w1lkg35c3f72ga0sb80cbya9bc2899lr";
       url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.19.0";
+      minOtpVersion = "25";
+      maxOtpVersion = "28";
+    };
+    "1.18.5" = {
+      sha256 = "0wyqa61ncgsjr6k3qcimxwnfa3b8a858zbg887g4vn3yd60yp5l9";
+      url = "https://codeload.github.com/elixir-lang/elixir/tar.gz/refs/tags/v1.18.5";
       minOtpVersion = "25";
       maxOtpVersion = "28";
     };
