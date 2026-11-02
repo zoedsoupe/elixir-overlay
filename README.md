@@ -92,6 +92,63 @@ You can override the OTP version used to compile Elixir using the `elixir-with-o
 }
 ```
 
+## Mix and Phoenix releases
+
+Create a toolchain once, then pass it to the generic Mix builder or the Phoenix-specific wrapper:
+
+```nix
+let
+  beam = pkgs.beam-overlay.mkToolchain {
+    elixir.version = "1.19.7";
+    erlang-otp.version = "28";
+  };
+in {
+  packages.mix-app = pkgs.beam-overlay.mkMixRelease {
+    toolchain = beam;
+    pname = "mix-app";
+    version = "0.1.0";
+    src = ./.;
+    mixDepsHash = "sha256-...";
+  };
+
+  packages.phoenix-app = pkgs.beam-overlay.mkPhoenixRelease {
+    toolchain = beam;
+    pname = "phoenix-app";
+    version = "0.1.0";
+    src = ./.;
+    mixDepsHash = "sha256-...";
+  };
+}
+```
+
+Both builders accept exactly one dependency strategy: `mixDepsHash`, `mixFodDeps`, or non-empty `mixNixDeps`. Other attributes are forwarded to nixpkgs' `mixRelease`.
+
+`mkPhoenixRelease` adds Tailwind/esbuild binary discovery and runs `assets.deploy --no-deps-check` before creating the release. Set `tailwindcss = null` or `esbuild = null` when the application does not use that integration, or `assetsDeploy = false` to disable the asset convention entirely.
+
+When using `mixDepsHash`, `mixDepsArgs` can pass additional environment and hooks to `fetchMixDeps`. This is useful for native dependencies that must be configured or fetched inside the fixed-output derivation:
+
+```nix
+pkgs.beam-overlay.mkMixRelease {
+  inherit toolchain pname version src mixDepsHash;
+  mixDepsArgs = {
+    env.MDEX_NATIVE_BUILD = "1";
+    preInstall = ''
+      export CARGO_HOME="$TEMPDIR/cargo-home"
+    '';
+    postInstall = ''
+      ${pkgs.cargo}/bin/cargo vendor --locked \
+        --manifest-path "$out/mdex_native/native/mdex_native_nif/Cargo.toml" \
+        "$out/cargo-vendor"
+    '';
+  };
+
+  env.MDEX_NATIVE_BUILD = "1";
+  nativeBuildInputs = [pkgs.cargo pkgs.rustc];
+}
+```
+
+The application remains responsible for configuring Cargo to use the vendored sources during the offline release build. `mixDepsArgs` is rejected with the other dependency strategies because it only applies to the builder-managed `fetchMixDeps` call.
+
 ## Acknowledgments
 
 - Inspired by [rust-overlay](https://github.com/oxalica/rust-overlay) by oxalica

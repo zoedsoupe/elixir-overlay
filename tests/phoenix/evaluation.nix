@@ -32,6 +32,11 @@
       tailwindcss = null;
       esbuild = null;
     });
+  withDepsArgs = beam.mkPhoenixRelease (base
+    // {
+      mixDepsHash = pkgs.lib.fakeHash;
+      mixDepsArgs.env.MDEX_NATIVE_BUILD = "1";
+    });
   noStrategy = beam.mkPhoenixRelease base;
   cleanedEntries = builtins.readDir byHash.src;
   twoStrategies = beam.mkPhoenixRelease (base
@@ -72,6 +77,7 @@ in {
     !(pkgs.lib.hasInfix "assets.deploy" withoutAssets.preInstall)
     && !(pkgs.lib.hasInfix "Tailwind.bin_path()" withoutAssets.postConfigure)
     && !(pkgs.lib.hasInfix "Esbuild.bin_path()" withoutAssets.postConfigure);
+  mixDepsArgsAreForwarded = withDepsArgs.mixFodDeps.MDEX_NATIVE_BUILD == "1";
   noStrategyIsRejected =
     !(builtins.tryEval (builtins.deepSeq noStrategy.drvPath true)).success;
   multipleStrategiesAreRejected =

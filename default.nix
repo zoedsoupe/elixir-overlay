@@ -26,8 +26,13 @@ final: prev: let
     inherit erlangOtp;
   };
 
-  mkPhoenixRelease = import ./lib/phoenix.nix {
+  mkMixRelease = import ./lib/mix-release.nix {
     inherit lib;
+    pkgs = final;
+  };
+
+  mkPhoenixRelease = import ./lib/phoenix.nix {
+    inherit lib mkMixRelease;
     pkgs = final;
   };
 in {
@@ -41,7 +46,7 @@ in {
   inherit elixir-with-otp;
 
   beam-overlay = {
-    inherit mkToolchain mkPhoenixRelease;
+    inherit mkToolchain mkMixRelease mkPhoenixRelease;
     inherit elixir;
     "erlang-otp" = erlangOtp.packages;
   };
