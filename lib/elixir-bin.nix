@@ -2,6 +2,7 @@
   lib,
   manifests,
   pkgs,
+  erlangOtpPackages,
   erlang ? null,
   ...
 }: let
@@ -21,9 +22,8 @@
       then pkgs.erlang_28
       else if maxOtp >= 27
       then pkgs.erlang_27
-      else if maxOtp >= 26
-      then pkgs.erlang_26
-      else pkgs.erlang_26; # Fallback to 26 for older Elixir versions
+      # OTP 26 was removed from nixpkgs; use the overlay's builder for legacy Elixir.
+      else erlangOtpPackages."26";
 
   buildElixir = version: versionData: let
     selectedErlang = selectErlang versionData;

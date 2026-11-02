@@ -50,6 +50,9 @@
   };
 in {
   legacyAlias = beam.elixir.latest.drvPath == pkgs.elixir-bin.latest.drvPath;
+  legacyElixirUsesOverlayOtp =
+    pkgs.elixir-bin."1.15.8".erlang.drvPath
+    == beam."erlang-otp"."26".drvPath;
   otpLatestAlias = beam."erlang-otp".latest.version == "29.1.2";
   otpMajorAlias = beam."erlang-otp"."28".version == "28.5.0.8";
   otpMinorAlias = beam."erlang-otp"."28.5".version == "28.5.0.8";

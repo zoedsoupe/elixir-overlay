@@ -9,6 +9,7 @@ final: prev: let
     import ./lib/elixir-bin.nix {
       inherit lib manifests erlang;
       pkgs = final;
+      erlangOtpPackages = erlangOtp.packages;
     };
 
   elixir = elixir-with-otp null;
@@ -41,6 +42,7 @@ in {
     // import ./lib/elixir-bin.nix {
       inherit lib manifests;
       pkgs = final;
+      erlangOtpPackages = erlangOtp.packages;
     };
 
   inherit elixir-with-otp;
