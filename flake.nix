@@ -1,29 +1,31 @@
 {
-  description = "Pure and reproducible Elixir overlays";
+  description = "Pure and reproducible BEAM packages and runtime helpers for Nix";
 
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05-small";
-    flake-utils.url = "github:numtide/flake-utils";
-  };
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05-small";
 
   outputs = {
     self,
     nixpkgs,
-    flake-utils,
     ...
-  }:
-    {
-      overlays.default = import ./.;
-
-      overlay = self.overlays.default;
-    }
-    // flake-utils.lib.eachDefaultSystem (
+  }: let
+    perSystem = nixpkgs.lib.genAttrs nixpkgs.lib.systems.flakeExposed (
       system: let
         pkgs = import nixpkgs {
           inherit system;
           overlays = [self.overlays.default];
         };
       in {
+        checks = nixpkgs.lib.optionalAttrs pkgs.stdenv.isLinux {
+          beam-apps = import ./tests/beam-apps.nix {
+            inherit pkgs;
+            beamModule = self.nixosModules.beam;
+          };
+          beam-image = import ./tests/beam-image.nix {
+            inherit pkgs;
+            mkBeamImage = self.lib.mkBeamImage;
+          };
+        };
+
         packages =
           {
             default = pkgs.elixir-bin.latest;
@@ -43,4 +45,20 @@
         };
       }
     );
+  in {
+    overlays.default = import ./.;
+
+    overlay = self.overlays.default;
+
+    nixosModules = {
+      beam = import ./modules/beam-apps.nix;
+      default = self.nixosModules.beam;
+    };
+
+    lib.mkBeamImage = import ./lib/beam-image.nix;
+
+    checks = builtins.mapAttrs (_: systemOutputs: systemOutputs.checks) perSystem;
+    packages = builtins.mapAttrs (_: systemOutputs: systemOutputs.packages) perSystem;
+    devShells = builtins.mapAttrs (_: systemOutputs: systemOutputs.devShells) perSystem;
+  };
 }

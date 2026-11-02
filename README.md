@@ -1,6 +1,6 @@
 # elixir-overlay
 
-Pure and reproducible Elixir overlays for Nix. Inspired by [rust-overlay](https://github.com/oxalica/rust-overlay), providing all Elixir versions with automatic updates and OTP compatibility tracking.
+Pure and reproducible BEAM packages and runtime helpers for Nix. Inspired by [rust-overlay](https://github.com/oxalica/rust-overlay), providing all Elixir versions with automatic updates and OTP compatibility tracking.
 
 ## Why `elixir-overlay`?
 
@@ -148,6 +148,61 @@ pkgs.beam-overlay.mkMixRelease {
 ```
 
 The application remains responsible for configuring Cargo to use the vendored sources during the offline release build. `mixDepsArgs` is rejected with the other dependency strategies because it only applies to the builder-managed `fetchMixDeps` call.
+
+## BEAM runtime helpers
+
+Runtime helpers are exposed independently of the Nix overlay. They accept any release package; importing them does not require using `mkToolchain` or the release builders.
+
+### Systemd services on NixOS
+
+Import `nixosModules.beam` and declare applications under `services.beam.apps`:
+
+```nix
+{
+  imports = [inputs.elixir-overlay.nixosModules.beam];
+
+  services.beam.apps.blog = {
+    enable = true;
+    package = blogRelease;
+    command = "bin/server";
+    preStart = ["${blogRelease}/bin/migrate"];
+
+    environment = {
+      PHX_SERVER = "true";
+      PHX_HOST = "blog.example.com";
+      PORT = "4000";
+    };
+    environmentFiles = ["/etc/beam/blog.env"];
+    stateDir = "/var/lib/blog/data";
+  };
+}
+```
+
+The module creates per-application users, state directories, and hardened systemd services. `arguments` passes arguments to `command`, and `extraServiceConfig` provides a systemd escape hatch. Phoenix environment, migrations, and distribution policy remain application configuration rather than module defaults.
+
+### Docker images
+
+Use `lib.mkBeamImage` with the package set appropriate for the image target:
+
+```nix
+image = inputs.elixir-overlay.lib.mkBeamImage {
+  inherit pkgs;
+  name = "blog";
+  package = blogRelease;
+  command = ["${blogRelease}/bin/server"];
+
+  environment = {
+    PHX_SERVER = "true";
+    PORT = 4000;
+  };
+  contents = [pkgs.cacert];
+  exposedPorts = {
+    "4000/tcp" = {};
+  };
+};
+```
+
+The result is a layered Docker image tarball. Additional Docker configuration can be merged through the `config` argument. Building the OCI artifact is a packaging concern; running it belongs to NixOS' existing `virtualisation.oci-containers` module. The BEAM systemd module deliberately does not duplicate container runtime, networking, or restart policy options.
 
 ## Acknowledgments
 
