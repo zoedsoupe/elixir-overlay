@@ -130,7 +130,7 @@ in {
 
 Both builders accept exactly one dependency strategy: `mixDepsHash`, `mixFodDeps`, or non-empty `mixNixDeps`. Other attributes are forwarded to nixpkgs' `mixRelease`.
 
-`mkPhoenixRelease` adds Tailwind/esbuild binary discovery and runs `assets.deploy --no-deps-check` before creating the release. Set `tailwindcss = null` or `esbuild = null` when the application does not use that integration, or `assetsDeploy = false` to disable the asset convention entirely.
+`mkPhoenixRelease` writes the Tailwind/esbuild store binary paths into `config/config.exs`, disables their wrapper version checks, and runs `assets.deploy --no-deps-check` before creating the release. It does not evaluate `config/runtime.exs` for asset discovery, so production secrets are not needed at build time. Set `tailwindcss = null` or `esbuild = null` when the application does not use that integration, or `assetsDeploy = false` to disable the asset convention entirely.
 
 When using `mixDepsHash`, `mixDepsArgs` can pass additional environment and hooks to `fetchMixDeps`. This is useful for native dependencies that must be configured or fetched inside the fixed-output derivation:
 
@@ -138,6 +138,8 @@ When using `mixDepsHash`, `mixDepsArgs` can pass additional environment and hook
 pkgs.beam-overlay.mkMixRelease {
   inherit toolchain pname version src mixDepsHash;
   mixDepsArgs = {
+    # Prevent patchShebangs from adding store references to vendored scripts.
+    dontPatchShebangs = true;
     env.MDEX_NATIVE_BUILD = "1";
     preInstall = ''
       export CARGO_HOME="$TEMPDIR/cargo-home"

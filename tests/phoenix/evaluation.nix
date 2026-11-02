@@ -22,6 +22,7 @@
   withHooks = beam.mkPhoenixRelease (base
     // {
       mixDepsHash = pkgs.lib.fakeHash;
+      preConfigure = "touch user-pre-configure-hook";
       preInstall = "touch user-pre-install-hook";
       postConfigure = "touch user-post-configure-hook";
     });
@@ -67,16 +68,23 @@ in {
     && !(cleanedEntries ? _checkouts)
     && !(cleanedEntries ? cover);
   userHooksArePreserved =
-    pkgs.lib.hasInfix "user-pre-install-hook" withHooks.preInstall
+    pkgs.lib.hasInfix "user-pre-configure-hook" withHooks.preConfigure
+    && pkgs.lib.hasInfix "user-pre-install-hook" withHooks.preInstall
     && pkgs.lib.hasInfix "user-post-configure-hook" withHooks.postConfigure;
   assetHooksAreAdded =
     pkgs.lib.hasInfix "assets.deploy --no-deps-check" withHooks.preInstall
-    && pkgs.lib.hasInfix "Tailwind.bin_path()" withHooks.postConfigure
-    && pkgs.lib.hasInfix "Esbuild.bin_path()" withHooks.postConfigure;
+    && pkgs.lib.hasInfix "config :tailwind, path:" withHooks.preConfigure
+    && pkgs.lib.hasInfix (builtins.unsafeDiscardStringContext "${pkgs.tailwindcss_4}/bin/tailwindcss") withHooks.preConfigure
+    && pkgs.lib.hasInfix "config :esbuild, path:" withHooks.preConfigure
+    && pkgs.lib.hasInfix (builtins.unsafeDiscardStringContext "${pkgs.esbuild}/bin/esbuild") withHooks.preConfigure
+    && pkgs.lib.hasInfix "version_check: false" withHooks.preConfigure;
+  assetDiscoverySkipsRuntimeConfig =
+    !(pkgs.lib.hasInfix "mix run" withHooks.preConfigure)
+    && !(pkgs.lib.hasInfix "mix run" withHooks.postConfigure);
   assetHooksCanBeDisabled =
     !(pkgs.lib.hasInfix "assets.deploy" withoutAssets.preInstall)
-    && !(pkgs.lib.hasInfix "Tailwind.bin_path()" withoutAssets.postConfigure)
-    && !(pkgs.lib.hasInfix "Esbuild.bin_path()" withoutAssets.postConfigure);
+    && !(pkgs.lib.hasInfix "config :tailwind, path:" withoutAssets.preConfigure)
+    && !(pkgs.lib.hasInfix "config :esbuild, path:" withoutAssets.preConfigure);
   mixDepsArgsAreForwarded = withDepsArgs.mixFodDeps.MDEX_NATIVE_BUILD == "1";
   noStrategyIsRejected =
     !(builtins.tryEval (builtins.deepSeq noStrategy.drvPath true)).success;

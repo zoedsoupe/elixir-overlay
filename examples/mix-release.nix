@@ -15,6 +15,10 @@
     inherit pname version src;
     hash = mixDepsHash;
 
+    # Keep vendored scripts free of store interpreters, which fixed-output
+    # derivations cannot retain as references.
+    dontPatchShebangs = true;
+
     preInstall = ''
       export CARGO_HOME="$TEMPDIR/cargo-home"
     '';

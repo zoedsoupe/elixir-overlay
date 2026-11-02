@@ -9,27 +9,21 @@
   esbuild ? pkgs.esbuild,
   ...
 } @ args: let
-  queryBinPath = module: ''
-    ${toolchain}/bin/mix run \
-      --no-compile \
-      --no-deps-check \
-      --no-start \
-      -e 'IO.write(${module}.bin_path())'
+  configureTailwind = lib.optionalString (assetsDeploy && tailwindcss != null) ''
+    cat >> config/config.exs <<'EOF'
+    config :tailwind, path: "${tailwindcss}/bin/tailwindcss", version_check: false
+    EOF
   '';
 
-  linkTailwind = lib.optionalString (assetsDeploy && tailwindcss != null) ''
-    tailwind_bin_path="$(${queryBinPath "Tailwind"})"
-    mkdir -p "$(dirname "$tailwind_bin_path")"
-    ln -sfn ${tailwindcss}/bin/tailwindcss "$tailwind_bin_path"
+  configureEsbuild = lib.optionalString (assetsDeploy && esbuild != null) ''
+    cat >> config/config.exs <<'EOF'
+    config :esbuild, path: "${esbuild}/bin/esbuild", version_check: false
+    EOF
   '';
 
-  linkEsbuild = lib.optionalString (assetsDeploy && esbuild != null) ''
-    esbuild_bin_path="$(${queryBinPath "Esbuild"})"
-    mkdir -p "$(dirname "$esbuild_bin_path")"
-    ln -sfn ${esbuild}/bin/esbuild "$esbuild_bin_path"
-  '';
-
-  generatedPostConfigure = linkTailwind + linkEsbuild;
+  # Do not use `mix run` to discover wrapper paths: it evaluates runtime.exs,
+  # which commonly requires production secrets that do not belong in a build.
+  generatedPreConfigure = configureTailwind + configureEsbuild;
   generatedPreInstall = lib.optionalString assetsDeploy ''
     ${toolchain}/bin/mix assets.deploy --no-deps-check
   '';
@@ -48,7 +42,7 @@ in
   mkMixRelease (
     forwardedArgs
     // {
-      postConfigure = appendHook "postConfigure" generatedPostConfigure;
+      preConfigure = appendHook "preConfigure" generatedPreConfigure;
       preInstall = appendHook "preInstall" generatedPreInstall;
     }
   )
