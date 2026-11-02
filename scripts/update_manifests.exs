@@ -6,13 +6,16 @@ defmodule ManifestUpdater do
   @otp_github_api_url "https://api.github.com/repos/erlang/otp/releases"
   @otp_manifest_directory Path.expand("../manifests/erlang-otp", __DIR__)
   @supported_otp_majors ["26", "27", "28", "29"]
+  @archive_manifest_directory Path.expand("../manifests/archives", __DIR__)
+  @archive_packages ["phx_new", "igniter_new"]
 
   def run do
     {:ok, _} = Application.ensure_all_started(:inets)
     {:ok, _} = Application.ensure_all_started(:ssl)
 
     with :ok <- update_elixir_manifests(),
-         :ok <- update_otp_manifests() do
+         :ok <- update_otp_manifests(),
+         :ok <- update_archive_manifests() do
       IO.puts("Manifests updated successfully!")
     else
       {:error, reason} ->
@@ -79,6 +82,100 @@ defmodule ManifestUpdater do
       end
     else
       {:error, reason} -> {:error, "Error fetching Erlang/OTP releases: #{reason}"}
+    end
+  end
+
+  defp update_archive_manifests do
+    IO.puts("Fetching Hex archive releases...")
+
+    Enum.reduce_while(@archive_packages, :ok, fn package, :ok ->
+      case update_archive_manifest(package) do
+        :ok -> {:cont, :ok}
+        {:error, reason} -> {:halt, {:error, reason}}
+      end
+    end)
+  end
+
+  defp update_archive_manifest(package) do
+    package_url = "https://hex.pm/api/packages/#{package}"
+
+    with {:ok, body} <- http_get(package_url, github_headers()),
+         {:ok, package_data} <- JSON.decode(body),
+         {:ok, version} <- latest_stable_hex_version(package_data["releases"]) do
+      package_directory = Path.join(@archive_manifest_directory, package)
+      current_versions = load_current_versions(package_directory)
+
+      if MapSet.member?(current_versions, version) do
+        IO.puts("No new #{package} release found.")
+        :ok
+      else
+        fetch_archive_manifest(package, version, package_directory)
+      end
+    else
+      {:error, reason} -> {:error, "Error fetching #{package} releases: #{inspect(reason)}"}
+    end
+  end
+
+  defp latest_stable_hex_version(releases) when is_list(releases) do
+    versions =
+      releases
+      |> Enum.map(& &1["version"])
+      |> Enum.filter(&stable_hex_version?/1)
+
+    case versions do
+      [] -> {:error, "Hex returned no stable releases."}
+      versions -> {:ok, Enum.max_by(versions, &Version.parse!/1)}
+    end
+  end
+
+  defp latest_stable_hex_version(_), do: {:error, "Hex returned an invalid release list."}
+
+  defp stable_hex_version?(version) when is_binary(version) do
+    case Version.parse(version) do
+      {:ok, %Version{pre: []}} -> true
+      _ -> false
+    end
+  end
+
+  defp stable_hex_version?(_), do: false
+
+  defp fetch_archive_manifest(package, version, directory) do
+    release_url = "https://hex.pm/api/packages/#{package}/releases/#{version}"
+
+    with {:ok, body} <- http_get(release_url, github_headers()),
+         {:ok, release_data} <- JSON.decode(body),
+         {:ok, min_elixir_version} <- minimum_elixir_version(release_data["meta"]),
+         {:ok, sha256} <- prefetch_hex_release(package, version) do
+      IO.puts("Adding #{package} #{version}.")
+
+      write_manifest(directory, version, %{
+        "sha256" => sha256,
+        "minElixirVersion" => min_elixir_version
+      })
+
+      :ok
+    else
+      {:error, reason} -> {:error, "Failed to update #{package} #{version}: #{inspect(reason)}"}
+    end
+  end
+
+  defp minimum_elixir_version(meta) when is_map(meta) do
+    requirement = meta["elixir"]
+
+    case requirement && Regex.run(~r/\d+\.\d+(?:\.\d+)?/, requirement) do
+      [version] -> {:ok, version}
+      _ -> {:error, "Hex release metadata has no supported Elixir requirement."}
+    end
+  end
+
+  defp minimum_elixir_version(_), do: {:error, "Hex release metadata is missing."}
+
+  defp prefetch_hex_release(package, version) do
+    url = "https://repo.hex.pm/tarballs/#{package}-#{version}.tar"
+
+    case System.cmd("nix-prefetch-url", [url]) do
+      {hash, 0} -> {:ok, String.trim(hash)}
+      {output, status} -> {:error, "nix-prefetch-url exited with status #{status}: #{output}"}
     end
   end
 

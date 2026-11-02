@@ -43,11 +43,12 @@ jobs:
           title: "Update BEAM manifests"
           body: |
             ## Summary
-            - Automatically updated Elixir and Erlang/OTP version manifests
+            - Automatically updated Elixir, Erlang/OTP, and Mix archive manifests
 
             ## Test plan
             - [ ] Verify new versions build correctly
             - [ ] Check OTP compatibility ranges are accurate
             - [ ] Check new Erlang/OTP release aliases
+            - [ ] Check Phoenix and Igniter archive versions
           branch: update-beam-manifests
           delete-branch: true

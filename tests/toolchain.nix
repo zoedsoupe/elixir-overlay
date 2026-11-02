@@ -9,6 +9,25 @@
     elixir.enable = false;
     erlang-otp.version = "28";
   };
+  withArchives = beam.mkToolchain {
+    elixir.version = "1.19.7";
+    erlang-otp.version = "28";
+    tools.phx_new.enable = true;
+    tools.igniter_new.enable = true;
+  };
+  oldElixirWithPhoenix = beam.mkToolchain {
+    elixir.version = "1.16.3";
+    erlang-otp.version = "26";
+    tools.phx_new.enable = true;
+  };
+  unknownPhoenixArchive = beam.mkToolchain {
+    elixir.version = "1.19.7";
+    erlang-otp.version = "28";
+    tools.phx_new = {
+      enable = true;
+      version = "9.9.9";
+    };
+  };
 in {
   legacyAlias = beam.elixir.latest.drvPath == pkgs.elixir-bin.latest.drvPath;
   otpLatestAlias = beam."erlang-otp".latest.version == "29.1.2";
@@ -20,6 +39,12 @@ in {
         erlang-otp.version = "25";
       })
       true)).success;
+  phoenixArchive = withArchives.beamScope.archives.phx_new.version == "1.8.16";
+  igniterArchive = withArchives.beamScope.archives.igniter_new.version == "0.5.35";
+  phoenixArchiveRequiresCompatibleElixir =
+    !(builtins.tryEval (builtins.deepSeq oldElixirWithPhoenix true)).success;
+  unknownPhoenixArchiveRejected =
+    !(builtins.tryEval (builtins.deepSeq unknownPhoenixArchive true)).success;
   pinnedElixir = pinned.beamScope.elixir.version == "1.19.7";
   explicitOtpUsedForElixir =
     pinned.beamScope.elixir.otpVersion == pinned.beamScope.erlang.version;
