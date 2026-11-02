@@ -10,6 +10,15 @@ final: prev: let
       inherit lib manifests erlang;
       pkgs = final;
     };
+
+  elixir = elixir-with-otp null;
+
+  mkToolchain = import ./lib/toolchain.nix {
+    inherit lib;
+    pkgs = final;
+    defaultElixirPackages = elixir;
+    elixirWithOtp = elixir-with-otp;
+  };
 in {
   elixir-bin =
     (prev.elixir-bin or {})
@@ -19,4 +28,9 @@ in {
     };
 
   inherit elixir-with-otp;
+
+  beam-overlay = {
+    inherit mkToolchain;
+    inherit elixir;
+  };
 }
