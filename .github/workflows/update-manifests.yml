@@ -22,8 +22,8 @@ jobs:
           elixir-version: 1.18.4
           otp-version: 27
 
-      - name: Run fetch script
-        run: ./scripts/fetch_elixir.exs
+      - name: Update manifests
+        run: elixir scripts/update_manifests.exs
 
       - name: Check for changes
         id: changes

@@ -1,6 +1,16 @@
 {lib, ...}: let
-  rawManifests = import ../manifests/stable/default.nix;
-  versions = rawManifests.versions;
+  manifestDirectory = ../manifests/elixir;
+  manifestFiles =
+    lib.filterAttrs
+    (name: type: type == "regular" && lib.hasSuffix ".json" name)
+    (builtins.readDir manifestDirectory);
+
+  versions = lib.listToAttrs (map (file: let
+    version = lib.removeSuffix ".json" file;
+  in {
+    name = version;
+    value = builtins.fromJSON (builtins.readFile (manifestDirectory + "/${file}"));
+  }) (lib.attrNames manifestFiles));
 
   # Automatically determine the latest stable version (excluding RC versions)
   latest = let
