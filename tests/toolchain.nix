@@ -5,6 +5,10 @@
     erlang-otp.version = "28";
     extraPackages = [pkgs.hello];
   };
+  elixir120WithOtp29 = beam.mkToolchain {
+    elixir.version = "1.20.5";
+    erlang-otp.version = "29";
+  };
   erlangOnly = beam.mkToolchain {
     elixir.enable = false;
     erlang-otp.version = "28";
@@ -75,6 +79,11 @@ in {
   pinnedElixir = pinned.beamScope.elixir.version == "1.19.7";
   explicitOtpUsedForElixir =
     pinned.beamScope.elixir.otpVersion == pinned.beamScope.erlang.version;
+  elixir120SupportsOtp29 =
+    elixir120WithOtp29.beamScope.elixir.version
+    == "1.20.5"
+    && builtins.head (pkgs.lib.splitString "." elixir120WithOtp29.beamScope.erlang.version) == "29"
+    && elixir120WithOtp29.beamScope.elixir.otpVersion == elixir120WithOtp29.beamScope.erlang.version;
   erlangOnlyHasNoElixir = pinned.beamScope.elixir != null && erlangOnly.beamScope.elixir == null;
   erlangOnlySelectsRequestedOtp =
     builtins.head (pkgs.lib.splitString "." erlangOnly.beamScope.erlang.version) == "28";

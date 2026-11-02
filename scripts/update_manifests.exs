@@ -397,6 +397,7 @@ defmodule ManifestUpdater do
 
   defp otp_compatibility(version) do
     case Version.parse!(version) do
+      %{major: 1, minor: minor} when minor >= 20 -> {"27", "29"}
       %{major: 1, minor: minor} when minor >= 18 -> {"25", "28"}
       %{major: 1, minor: minor} when minor >= 17 -> {"25", "27"}
       %{major: 1, minor: minor} when minor >= 16 -> {"24", "27"}
