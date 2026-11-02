@@ -1,4 +1,4 @@
-name: Update Elixir Manifests
+name: Update BEAM Manifests
 
 on:
   schedule:
@@ -19,8 +19,8 @@ jobs:
       - name: Setup Elixir
         uses: erlef/setup-beam@v1
         with:
-          elixir-version: 1.18.4
-          otp-version: 27
+          elixir-version: 1.20.5
+          otp-version: 29
 
       - name: Update manifests
         run: elixir scripts/update_manifests.exs
@@ -28,10 +28,10 @@ jobs:
       - name: Check for changes
         id: changes
         run: |
-          if git diff --quiet manifests/; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          else
+          if [ -n "$(git status --porcelain -- manifests/)" ]; then
             echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create Pull Request
@@ -39,14 +39,15 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.TOKEN }}
-          commit-message: "update: elixir manifests"
-          title: "Update Elixir manifests"
+          commit-message: "update: beam manifests"
+          title: "Update BEAM manifests"
           body: |
             ## Summary
-            - Automatically updated Elixir version manifests with latest releases
+            - Automatically updated Elixir and Erlang/OTP version manifests
 
             ## Test plan
             - [ ] Verify new versions build correctly
             - [ ] Check OTP compatibility ranges are accurate
-          branch: update-elixir-manifests
+            - [ ] Check new Erlang/OTP release aliases
+          branch: update-beam-manifests
           delete-branch: true

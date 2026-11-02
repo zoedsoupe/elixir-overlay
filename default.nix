@@ -13,11 +13,17 @@ final: prev: let
 
   elixir = elixir-with-otp null;
 
+  erlangOtp = import ./lib/erlang-otp.nix {
+    inherit lib;
+    pkgs = final;
+  };
+
   mkToolchain = import ./lib/toolchain.nix {
     inherit lib;
     pkgs = final;
     defaultElixirPackages = elixir;
     elixirWithOtp = elixir-with-otp;
+    inherit erlangOtp;
   };
 in {
   elixir-bin =
@@ -32,5 +38,6 @@ in {
   beam-overlay = {
     inherit mkToolchain;
     inherit elixir;
+    "erlang-otp" = erlangOtp.packages;
   };
 }

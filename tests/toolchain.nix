@@ -11,6 +11,15 @@
   };
 in {
   legacyAlias = beam.elixir.latest.drvPath == pkgs.elixir-bin.latest.drvPath;
+  otpLatestAlias = beam."erlang-otp".latest.version == "29.1.2";
+  otpMajorAlias = beam."erlang-otp"."28".version == "28.5.0.8";
+  otpMinorAlias = beam."erlang-otp"."28.5".version == "28.5.0.8";
+  otp25Unavailable =
+    !(builtins.tryEval (builtins.deepSeq (beam.mkToolchain {
+        elixir.enable = false;
+        erlang-otp.version = "25";
+      })
+      true)).success;
   pinnedElixir = pinned.beamScope.elixir.version == "1.19.7";
   explicitOtpUsedForElixir =
     pinned.beamScope.elixir.otpVersion == pinned.beamScope.erlang.version;
