@@ -109,6 +109,27 @@
         exec "${selectedElixir}/bin/mix" "$@"
       '';
 
+  selectedLivebook =
+    if options.tools.livebook.enable
+    then pkgs.livebook
+    else null;
+
+  selectedTailwindcss =
+    if options.tools.tailwindcss.enable
+    then builtins.getAttr "tailwindcss_${toString options.tools.tailwindcss.major}" pkgs
+    else null;
+
+  selectedEsbuild =
+    if options.tools.esbuild.enable
+    then pkgs.esbuild
+    else null;
+
+  selectedToolPackages = builtins.filter (package: package != null) [
+    selectedLivebook
+    selectedTailwindcss
+    selectedEsbuild
+  ];
+
   otpMajor = lib.head (lib.splitString "." selectedOtp.version);
   requiredOtp =
     if selectedElixir == null
@@ -127,6 +148,7 @@
       then []
       else [selectedElixir]
     )
+    ++ selectedToolPackages
     ++ options.extraPackages;
 
   baseToolchain = pkgs.buildEnv {
@@ -162,6 +184,11 @@ in
           archives = {
             phx_new = selectedPhxNew;
             igniter_new = selectedIgniterNew;
+          };
+          tools = {
+            livebook = selectedLivebook;
+            tailwindcss = selectedTailwindcss;
+            esbuild = selectedEsbuild;
           };
         };
       }

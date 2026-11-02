@@ -28,6 +28,26 @@
       version = "9.9.9";
     };
   };
+  withNativeTools = beam.mkToolchain {
+    elixir.version = "1.19.7";
+    erlang-otp.version = "28";
+    tools = {
+      livebook.enable = true;
+      tailwindcss = {
+        enable = true;
+        major = 3;
+      };
+      esbuild.enable = true;
+    };
+  };
+  withTailwind4 = beam.mkToolchain {
+    elixir.version = "1.19.7";
+    erlang-otp.version = "28";
+    tools.tailwindcss = {
+      enable = true;
+      major = 4;
+    };
+  };
 in {
   legacyAlias = beam.elixir.latest.drvPath == pkgs.elixir-bin.latest.drvPath;
   otpLatestAlias = beam."erlang-otp".latest.version == "29.1.2";
@@ -45,6 +65,10 @@ in {
     !(builtins.tryEval (builtins.deepSeq oldElixirWithPhoenix true)).success;
   unknownPhoenixArchiveRejected =
     !(builtins.tryEval (builtins.deepSeq unknownPhoenixArchive true)).success;
+  livebookSelected = withNativeTools.beamScope.tools.livebook.version == pkgs.livebook.version;
+  tailwind3Selected = withNativeTools.beamScope.tools.tailwindcss.version == pkgs.tailwindcss_3.version;
+  tailwind4Selected = withTailwind4.beamScope.tools.tailwindcss.version == pkgs.tailwindcss_4.version;
+  esbuildSelected = withNativeTools.beamScope.tools.esbuild.version == pkgs.esbuild.version;
   pinnedElixir = pinned.beamScope.elixir.version == "1.19.7";
   explicitOtpUsedForElixir =
     pinned.beamScope.elixir.otpVersion == pinned.beamScope.erlang.version;
