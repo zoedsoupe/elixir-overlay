@@ -60,6 +60,15 @@
 
   selectedElixir = selectElixir selectedElixirPackages;
 
+  selectedBeamPackages =
+    if selectedElixir == null
+    then null
+    else
+      pkgs.beamPackages.extend (_: _: {
+        elixir = selectedElixir;
+        erlang = selectedOtp;
+      });
+
   archivePackageSets =
     if selectedElixir == null
     then {}
@@ -181,6 +190,14 @@ in
         beamScope = {
           elixir = selectedElixir;
           erlang = selectedOtp;
+          mixRelease =
+            if selectedBeamPackages == null
+            then null
+            else selectedBeamPackages.mixRelease;
+          fetchMixDeps =
+            if selectedBeamPackages == null
+            then null
+            else selectedBeamPackages.fetchMixDeps;
           archives = {
             phx_new = selectedPhxNew;
             igniter_new = selectedIgniterNew;
