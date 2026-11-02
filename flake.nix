@@ -26,27 +26,31 @@
             inherit (pkgs) lib;
             inherit pkgs;
           }).smoke;
-      in {
-        checks = nixpkgs.lib.optionalAttrs pkgs.stdenv.isLinux (
-          {
-            archives = import ./tests/archives.nix {inherit pkgs;};
-            beam-apps = import ./tests/beam-apps.nix {
-              inherit pkgs;
-              beamModule = self.nixosModules.beam;
-            };
-            beam-image = import ./tests/beam-image.nix {
-              inherit pkgs;
-              mkBeamImage = self.lib.mkBeamImage;
-            };
-            mix-release = import ./tests/mix/check.nix {inherit pkgs;};
-            phoenix-release = import ./tests/phoenix/check.nix {inherit pkgs;};
-          }
-          // nixpkgs.lib.mapAttrs' (version: drv: {
+        otpSmokeChecks =
+          nixpkgs.lib.mapAttrs' (version: drv: {
             name = "otp-${builtins.replaceStrings ["."] ["_"] version}-smoke";
             value = drv;
           })
-          otpSmoke
-        );
+          otpSmoke;
+      in {
+        checks =
+          nixpkgs.lib.optionalAttrs pkgs.stdenv.isLinux (
+            {
+              archives = import ./tests/archives.nix {inherit pkgs;};
+              beam-apps = import ./tests/beam-apps.nix {
+                inherit pkgs;
+                beamModule = self.nixosModules.beam;
+              };
+              beam-image = import ./tests/beam-image.nix {
+                inherit pkgs;
+                mkBeamImage = self.lib.mkBeamImage;
+              };
+              mix-release = import ./tests/mix/check.nix {inherit pkgs;};
+              phoenix-release = import ./tests/phoenix/check.nix {inherit pkgs;};
+            }
+            // otpSmokeChecks
+          )
+          // nixpkgs.lib.optionalAttrs (system == "aarch64-darwin") otpSmokeChecks;
 
         packages = let
           elixirPackages = pkgs.beam-overlay.elixir;
