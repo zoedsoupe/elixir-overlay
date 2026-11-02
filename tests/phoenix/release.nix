@@ -12,7 +12,7 @@ in
     pname = "phoenix-fixture";
     version = "0.1.0";
     src = ./fixture;
-    mixDepsHash = pkgs.lib.fakeHash;
+    mixDepsHash = "sha256-HVSxznEG1Pa5PiY5v/niMkomzd93G3E8rHRQQp20Phs=";
     inherit assetsDeploy;
     tailwindcss =
       if assetsDeploy

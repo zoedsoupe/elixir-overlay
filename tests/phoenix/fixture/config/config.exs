@@ -11,10 +11,16 @@ config :phoenix_fixture, ecto_repos: []
 
 config :tailwind,
   version: "4.3.1",
-  default: ["--input=assets/css/app.css", "--output=priv/static/assets/app.css"]
+  default: [
+    args: ~w(--input=assets/css/app.css --output=priv/static/assets/app.css),
+    cd: Path.expand("..", __DIR__)
+  ]
 
 config :esbuild,
   version: "0.27.2",
-  default: ["js/app.js", "--bundle", "--target=es2017", "--outdir=../priv/static/assets"]
+  default: [
+    args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets),
+    cd: Path.expand("../assets", __DIR__)
+  ]
 
 import_config "#{config_env()}.exs"

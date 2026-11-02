@@ -6,6 +6,7 @@ in
     nativeBuildInputs = [release releaseWithoutAssets];
   } ''
     test -x ${release}/bin/phoenix_fixture
+    export RELEASE_COOKIE=phoenix-fixture-check-cookie
     ${release}/bin/phoenix_fixture eval 'IO.puts("phoenix-release-eval-ok")' \
       | grep -F phoenix-release-eval-ok
 
