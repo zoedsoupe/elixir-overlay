@@ -1,8 +1,8 @@
-# elixir-overlay
+# beam-overlay
 
 Pure and reproducible BEAM packages and runtime helpers for Nix. Inspired by [rust-overlay](https://github.com/oxalica/rust-overlay), providing all Elixir versions with automatic updates and OTP compatibility tracking.
 
-## Why `elixir-overlay`?
+## Why `beam-overlay`?
 
 - **All Elixir versions**: Access to any Elixir version from `1.15.0` to latest, including release candidates
 - **Automatic updates**: Daily automated checks for new releases with auto-generated PRs
@@ -21,33 +21,36 @@ Add to your `flake.nix`:
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
-    elixir-overlay.url = "github:zoedsoupe/elixir-overlay";
+    beam-overlay.url = "github:zoedsoupe/beam-overlay";
   };
 
-  outputs = { self, nixpkgs, elixir-overlay }:
+  outputs = { self, nixpkgs, beam-overlay }:
     let
       system = "x86_64-linux"; # or "aarch64-darwin", etc.
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ elixir-overlay.overlays.default ];
+        overlays = [ beam-overlay.overlays.default ];
+      };
+      beam = pkgs.beam-overlay.mkToolchain {
+        elixir.version = "1.19.7";
+        erlang-otp.version = "28";
       };
     in {
       devShells.default = pkgs.mkShell {
-        buildInputs = with pkgs; [
-          elixir-bin.latest          # Latest Elixir
-          elixir-bin."1.18.6"        # Specific version
-        ];
+        packages = [ beam ];
       };
     };
 }
 ```
+
+See the runnable [development-shell example](examples/dev-shell/flake.nix) for a toolchain with Mix archives and asset tools.
 
 ### Quick Shell
 
 For a quick play, just use `nix shell` to bring the latest Elixir into scope:
 
 ```shell
-$ nix shell github:zoedsoupe/elixir-overlay
+$ nix shell github:zoedsoupe/beam-overlay
 $ elixir --version
 ```
 
@@ -57,40 +60,44 @@ All Elixir versions starting from **1.15.0** are available, including release ca
 
 ## Package Names
 
-Elixir versions are available using the following patterns:
+Elixir versions are available through `pkgs.beam-overlay.elixir`:
 
-- `pkgs.elixir-bin.latest` - Latest stable version
-- `pkgs.elixir-bin."1.18.4"` - Specific version with quotes
-- `pkgs.elixir-bin."1.19.0-rc.0"` - Release candidate versions
+- `pkgs.beam-overlay.elixir.latest` - Latest stable version
+- `pkgs.beam-overlay.elixir."1.18.4"` - Specific version with quotes
+- `pkgs.beam-overlay.elixir."1.19.0-rc.0"` - Release candidate versions
 
 ## Custom OTP/Erlang Version
 
-You can override the OTP version used to compile Elixir using the `elixir-with-otp` function, otherwise the latest compatible otp version is used by default:
+Select the Elixir and OTP versions together with `mkToolchain`:
 
 ```nix
 # flake.nix
 {
-  outputs = { nixpkgs, elixir-overlay, ... }:
+  outputs = { nixpkgs, beam-overlay, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [ elixir-overlay.overlays.default ];
+        overlays = [ beam-overlay.overlays.default ];
       };
 
-      # Create custom Elixir packages with specific OTP versions
-      elixir-with-otp26 = pkgs.elixir-with-otp pkgs.erlang_26;
-      elixir-with-otp27 = pkgs.elixir-with-otp pkgs.erlang_27;
+      toolchain = pkgs.beam-overlay.mkToolchain {
+        elixir.version = "1.19.7";
+        erlang-otp.version = "28";
+      };
     in {
       devShells.default = pkgs.mkShell {
-        buildInputs = [
-          elixir-with-otp26."1.19.0-rc.0"
-          elixir-with-otp27.latest
-        ];
+        packages = [ toolchain ];
       };
     };
 }
 ```
+
+If no OTP version is specified, the toolchain selects the newest compatible OTP release. Set `elixir.enable = false` to create an Erlang-only environment.
+
+## Binary cache
+
+The flake advertises the public Cachix substituter for prebuilt packages. Accept the flake's Nix configuration when prompted, or add `https://elixir-overlay.cachix.org` as a substituter and trust `elixir-overlay.cachix.org-1:03zcUxISSuNn2vnKPfUJFinDGU5vzhyc+cPbB7u77xA=`.
 
 ## Mix and Phoenix releases
 
@@ -159,7 +166,7 @@ Import `nixosModules.beam` and declare applications under `services.beam.apps`:
 
 ```nix
 {
-  imports = [inputs.elixir-overlay.nixosModules.beam];
+  imports = [inputs.beam-overlay.nixosModules.beam];
 
   services.beam.apps.blog = {
     enable = true;
@@ -185,7 +192,7 @@ The module creates per-application users, state directories, and hardened system
 Use `lib.mkBeamImage` with the package set appropriate for the image target:
 
 ```nix
-image = inputs.elixir-overlay.lib.mkBeamImage {
+image = inputs.beam-overlay.lib.mkBeamImage {
   inherit pkgs;
   name = "blog";
   package = blogRelease;

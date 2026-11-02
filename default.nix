@@ -6,7 +6,7 @@ final: prev: let
   };
 
   elixir-with-otp = erlang:
-    import ./lib/elixir-bin.nix {
+    import ./lib/elixir.nix {
       inherit lib manifests erlang;
       pkgs = final;
       erlangOtpPackages = erlangOtp.packages;
@@ -37,14 +37,6 @@ final: prev: let
     pkgs = final;
   };
 in {
-  elixir-bin =
-    (prev.elixir-bin or {})
-    // import ./lib/elixir-bin.nix {
-      inherit lib manifests;
-      pkgs = final;
-      erlangOtpPackages = erlangOtp.packages;
-    };
-
   inherit elixir-with-otp;
 
   beam-overlay = {
