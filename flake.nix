@@ -84,8 +84,8 @@
     overlay = self.overlays.default;
 
     nixosModules = {
-      beam-apps = import ./modules/beam-apps.nix;
-      beam-containers = import ./modules/beam-containers.nix;
+      beam-apps = ./modules/beam-apps.nix;
+      beam-containers = ./modules/beam-containers.nix;
       beam = {
         imports = [
           ./modules/beam-apps.nix

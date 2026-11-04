@@ -189,6 +189,35 @@ Import `nixosModules.beam` and declare applications under `services.beam.apps`:
 
 The module creates per-application users, state directories, and hardened systemd services. `arguments` passes arguments to `command`, and `extraServiceConfig` provides a systemd escape hatch. Phoenix environment, migrations, and distribution policy remain application configuration rather than module defaults.
 
+### OCI containers on NixOS
+
+Import `nixosModules.beam` and declare published images under `services.beam.containers`:
+
+```nix
+{
+  imports = [inputs.beam-overlay.nixosModules.beam];
+
+  services.beam.containers.blog = {
+    enable = true;
+    image = "ghcr.io/example/blog:1.2.3";
+    uid = 33333;
+    gid = 33333;
+    dataDir = "/zdata/blog";
+    requiredMounts = ["/zdata"];
+    port = 4000;
+    environment = {
+      PHX_SERVER = "true";
+      PHX_HOST = "blog.example.com";
+    };
+    environmentFiles = ["/etc/beam/blog.env"];
+  };
+}
+```
+
+The module creates the service user and group, mounts `dataDir` at `/data`, publishes `port` on `listenAddress`, and runs the container through NixOS' Docker-backed `virtualisation.oci-containers` module. Images must use an explicit non-`latest` tag or a SHA-256 digest. `requiredMounts` are checked before startup.
+
+`volumes` adds mounts beyond the managed data directory. `entrypoint` and `cmd` override image execution. `extraContainerConfig` and `extraServiceConfig` are the escape hatches for upstream container and systemd settings. Application-specific companion modules can contribute environment, files, volumes, and additional services without redeclaring this deployment API.
+
 ### Docker images
 
 Use `lib.mkBeamImage` with the package set appropriate for the image target:
@@ -211,7 +240,7 @@ image = inputs.beam-overlay.lib.mkBeamImage {
 };
 ```
 
-The result is a layered Docker image tarball. Additional Docker configuration can be merged through the `config` argument. Building the OCI artifact is a packaging concern; running it belongs to NixOS' existing `virtualisation.oci-containers` module. The BEAM systemd module deliberately does not duplicate container runtime, networking, or restart policy options.
+The result is a layered Docker image tarball. Additional Docker configuration can be merged through the `config` argument. Use `services.beam.containers` to run a published image, or NixOS' existing `virtualisation.oci-containers` module when the shared deployment conventions are not wanted.
 
 ## Acknowledgments
 

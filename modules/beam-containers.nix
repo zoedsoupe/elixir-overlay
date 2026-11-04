@@ -166,42 +166,42 @@ in {
   config = lib.mkMerge [
     {
       assertions =
-      lib.mapAttrsToList (name: container: {
-        assertion = imagePinned container.image;
-        message = "services.beam.containers.${name}.image must select an explicit tag or SHA-256 digest, not latest.";
-      })
+        lib.mapAttrsToList (name: container: {
+          assertion = imagePinned container.image;
+          message = "services.beam.containers.${name}.image must select an explicit tag or SHA-256 digest, not latest.";
+        })
+        enabled;
+
+      users.users = lib.mapAttrs' (name: container:
+        lib.nameValuePair name {
+          isSystemUser = true;
+          group = name;
+          uid = container.uid;
+          home = container.dataDir;
+          description = "${name} service user";
+        })
       enabled;
 
-    users.users = lib.mapAttrs' (name: container:
-      lib.nameValuePair name {
-        isSystemUser = true;
-        group = name;
-        uid = container.uid;
-        home = container.dataDir;
-        description = "${name} service user";
-      })
-    enabled;
-
-    users.groups = lib.mapAttrs' (name: container:
-      lib.nameValuePair name {gid = container.gid;})
-    enabled;
-
-    systemd.tmpfiles.rules =
-      lib.mapAttrsToList (name: container: "d '${container.dataDir}' 0700 ${name} ${name} -")
+      users.groups = lib.mapAttrs' (name: container:
+        lib.nameValuePair name {gid = container.gid;})
       enabled;
 
-    virtualisation.oci-containers.containers = lib.mapAttrs containerConfig enabled;
+      systemd.tmpfiles.rules =
+        lib.mapAttrsToList (name: container: "d '${container.dataDir}' 0700 ${name} ${name} -")
+        enabled;
 
-    systemd.services = lib.mapAttrs' (name: container: let
-      serviceName = (containerConfig name container).serviceName;
-    in
-      lib.nameValuePair serviceName ({
-          unitConfig.RequiresMountsFor = lib.unique ([container.dataDir] ++ container.requiredMounts);
-          serviceConfig = container.extraServiceConfig;
-        }
-        // lib.optionalAttrs (container.requiredMounts != []) {
-          preStart = storagePreStart container;
-        }))
+      virtualisation.oci-containers.containers = lib.mapAttrs containerConfig enabled;
+
+      systemd.services = lib.mapAttrs' (name: container: let
+        serviceName = (containerConfig name container).serviceName;
+      in
+        lib.nameValuePair serviceName ({
+            unitConfig.RequiresMountsFor = lib.unique ([container.dataDir] ++ container.requiredMounts);
+            serviceConfig = container.extraServiceConfig;
+          }
+          // lib.optionalAttrs (container.requiredMounts != []) {
+            preStart = storagePreStart container;
+          }))
       enabled;
     }
     (mkIf (enabled != {}) {
