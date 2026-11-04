@@ -39,7 +39,11 @@
               archives = import ./tests/archives.nix {inherit pkgs;};
               beam-apps = import ./tests/beam-apps.nix {
                 inherit pkgs;
-                beamModule = self.nixosModules.beam;
+                beamModule = self.nixosModules.beam-apps;
+              };
+              beam-containers = import ./tests/beam-containers.nix {
+                inherit pkgs;
+                beamContainersModule = self.nixosModules.beam-containers;
               };
               beam-image = import ./tests/beam-image.nix {
                 inherit pkgs;
@@ -80,7 +84,14 @@
     overlay = self.overlays.default;
 
     nixosModules = {
-      beam = import ./modules/beam-apps.nix;
+      beam-apps = import ./modules/beam-apps.nix;
+      beam-containers = import ./modules/beam-containers.nix;
+      beam = {
+        imports = [
+          ./modules/beam-apps.nix
+          ./modules/beam-containers.nix
+        ];
+      };
       default = self.nixosModules.beam;
     };
 
